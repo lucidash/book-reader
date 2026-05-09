@@ -1,0 +1,8 @@
+# Book Reader
+
+Single-file static reading app inspired by the adjacent `word-book` project.
+
+- Preview: https://htmlpreview.github.io/?https://gist.githubusercontent.com/lucidash/c8159d35a2677cc01940357822dab316/raw/index.html
+- Gist: https://gist.github.com/lucidash/c8159d35a2677cc01940357822dab316
+
+GitHub serves raw Gist HTML as plain text, so the preview link uses an HTML preview wrapper to render the page as a website.

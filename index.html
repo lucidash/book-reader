@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Book Reader</title>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f6f8f4;
+  --ink: #17211d;
+  --muted: #5c6a63;
+  --panel: #ffffff;
+  --line: #d9e2db;
+  --soft: #eaf1eb;
+  --accent: #24735f;
+  --accent-ink: #ffffff;
+  --coral: #e15f4f;
+  --sky: #3d7ea6;
+  --sun: #e2ac2f;
+  --focus: #101916;
+  --shadow: 0 16px 42px rgba(28, 43, 35, .12);
+  --radius: 8px;
+  --reader-size: 1.08rem;
+}
+
+:root[data-theme="night"] {
+  color-scheme: dark;
+  --bg: #111715;
+  --ink: #eef5ef;
+  --muted: #a8b7ad;
+  --panel: #1a2420;
+  --line: #33443b;
+  --soft: #22302a;
+  --accent: #72c7a6;
+  --accent-ink: #102019;
+  --coral: #ff897d;
+  --sky: #7db5d3;
+  --sun: #f0c967;
+  --focus: #f7fff9;
+  --shadow: 0 16px 42px rgba(0, 0, 0, .28);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    linear-gradient(180deg, rgba(36, 115, 95, .08), transparent 280px),
+    var(--bg);
+  color: var(--ink);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  color: inherit;
+}
+
+.app {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(232px, 286px) minmax(0, 1fr);
+}
+
+.sidebar {
+  border-right: 1px solid var(--line);
+  background: rgba(255, 255, 255, .58);
+  backdrop-filter: blur(12px);
+  padding: 18px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: auto;
+}
+
+[data-theme="night"] .sidebar {
+  background: rgba(26, 36, 32, .76);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.brand-mark {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius);
+  display: grid;
+  place-items: center;
+  background: var(--ink);
+  color: var(--bg);
+  box-shadow: var(--shadow);
+}
+
+.brand h1 {
+  margin: 0;
+  font-size: 1.06rem;
+  line-height: 1.1;
+  letter-spacing: 0;
+}
+
+.brand p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: .83rem;
+}
+
+.search {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.search svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+}
+
+.search input {
+  width: 100%;
+  height: 42px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--ink);
+  padding: 0 12px 0 40px;
+  outline: none;
+}
+
+.search input:focus {
+  border-color: var(--focus);
+  box-shadow: 0 0 0 3px rgba(36, 115, 95, .16);
+}
+
+.section-label {
+  margin: 18px 0 8px;
+  font-size: .74rem;
+  color: var(--muted);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.book-list {
+  display: grid;
+  gap: 10px;
+}
+
+.book-card {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 10px;
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  gap: 10px;
+  text-align: left;
+  transition: transform .14s ease, border-color .14s ease, box-shadow .14s ease;
+}
+
+.book-card:hover,
+.book-card:focus-visible {
+  transform: translateY(-1px);
+  border-color: var(--focus);
+  box-shadow: 0 8px 24px rgba(28, 43, 35, .10);
+  outline: none;
+}
+
+.book-card.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(36, 115, 95, .16);
+}
+
+.cover {
+  width: 52px;
+  height: 68px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--soft);
+}
+
+.book-card h2 {
+  margin: 1px 0 5px;
+  font-size: .94rem;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+
+.book-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: .78rem;
+  line-height: 1.35;
+}
+
+.mini-progress {
+  display: block;
+  width: 100%;
+  margin-top: 9px;
+  height: 5px;
+  border-radius: 99px;
+  background: var(--soft);
+  overflow: hidden;
+}
+
+.mini-progress span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+}
+
+.main {
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+.toolbar {
+  min-height: 68px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(246, 248, 244, .72);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px clamp(16px, 4vw, 42px);
+}
+
+[data-theme="night"] .toolbar {
+  background: rgba(17, 23, 21, .78);
+}
+
+.toolbar-title {
+  min-width: 0;
+}
+
+.toolbar-title p {
+  margin: 0 0 3px;
+  color: var(--muted);
+  font-size: .79rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.toolbar-title h2 {
+  margin: 0;
+  font-size: clamp(1rem, 2.2vw, 1.28rem);
+  line-height: 1.22;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0;
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.icon-btn,
+.text-btn {
+  height: 40px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  display: inline-grid;
+  place-items: center;
+  cursor: pointer;
+  transition: transform .14s ease, border-color .14s ease, background .14s ease;
+}
+
+.icon-btn {
+  width: 40px;
+  padding: 0;
+  position: relative;
+}
+
+.text-btn {
+  grid-auto-flow: column;
+  gap: 8px;
+  padding: 0 13px;
+  font-weight: 800;
+}
+
+.primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.icon-btn:hover,
+.text-btn:hover,
+.icon-btn:focus-visible,
+.text-btn:focus-visible {
+  transform: translateY(-1px);
+  border-color: var(--focus);
+  outline: none;
+}
+
+.icon-btn[aria-pressed="true"] {
+  background: var(--soft);
+  border-color: var(--accent);
+}
+
+.icon-btn[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: -34px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: var(--ink);
+  color: var(--bg);
+  font-size: .72rem;
+  font-weight: 800;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .12s ease;
+  z-index: 8;
+}
+
+.icon-btn[data-tip]:hover::after,
+.icon-btn[data-tip]:focus-visible::after {
+  opacity: 1;
+}
+
+.reader-wrap {
+  padding: clamp(18px, 5vw, 52px);
+  display: grid;
+  align-content: start;
+  gap: 22px;
+}
+
+.reader-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(226px, 320px);
+  gap: clamp(18px, 3.2vw, 34px);
+  align-items: start;
+}
+
+.reader {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.reader-head {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 18px;
+  padding: clamp(18px, 3vw, 28px);
+  border-bottom: 1px solid var(--line);
+}
+
+.large-cover {
+  width: 120px;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--soft);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22);
+}
+
+.book-meta {
+  min-width: 0;
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  color: var(--accent);
+  font-weight: 900;
+  font-size: .78rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.book-meta h3 {
+  margin: 0;
+  font-size: clamp(1.8rem, 5vw, 3rem);
+  line-height: 1.02;
+  letter-spacing: 0;
+}
+
+.book-meta .summary {
+  margin: 14px 0 0;
+  color: var(--muted);
+  max-width: 58ch;
+  line-height: 1.6;
+}
+
+.stats {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.pill {
+  border: 1px solid var(--line);
+  background: var(--soft);
+  border-radius: 999px;
+  padding: 7px 10px;
+  color: var(--muted);
+  font-size: .82rem;
+  font-weight: 800;
+}
+
+.page {
+  padding: clamp(20px, 4vw, 42px);
+}
+
+.page-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.page-count {
+  color: var(--muted);
+  font-weight: 900;
+  font-size: .84rem;
+}
+
+.progress {
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--soft);
+  overflow: hidden;
+}
+
+.progress span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--accent), var(--sky), var(--sun));
+}
+
+.page-title {
+  margin: 0 0 16px;
+  font-size: clamp(1.38rem, 3vw, 2rem);
+  line-height: 1.16;
+  letter-spacing: 0;
+}
+
+.story-text {
+  display: grid;
+  gap: 14px;
+  font-size: var(--reader-size);
+  line-height: 1.86;
+}
+
+.sentence {
+  display: block;
+  border-radius: 6px;
+  padding: 2px 4px;
+  margin: 0 -4px;
+  cursor: pointer;
+}
+
+.sentence:hover,
+.sentence.active {
+  background: color-mix(in srgb, var(--sun) 26%, transparent);
+}
+
+.sentence.active {
+  box-shadow: inset 4px 0 0 var(--sun);
+}
+
+.page-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+.side-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.tool-panel {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 16px;
+}
+
+.tool-panel h3 {
+  margin: 0 0 12px;
+  font-size: .96rem;
+  letter-spacing: 0;
+}
+
+.toc {
+  display: grid;
+  gap: 8px;
+}
+
+.toc button {
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: transparent;
+  padding: 8px 10px;
+  text-align: left;
+  cursor: pointer;
+  color: var(--muted);
+}
+
+.toc button:hover,
+.toc button:focus-visible {
+  border-color: var(--focus);
+  color: var(--ink);
+  outline: none;
+}
+
+.toc button.active {
+  background: var(--soft);
+  border-color: var(--accent);
+  color: var(--ink);
+  font-weight: 900;
+}
+
+.vocab {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.vocab button {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--soft);
+  color: var(--ink);
+  min-height: 34px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.vocab button:hover,
+.vocab button:focus-visible {
+  border-color: var(--focus);
+  outline: none;
+}
+
+.note {
+  color: var(--muted);
+  font-size: .9rem;
+  line-height: 1.56;
+  margin: 0;
+}
+
+.empty {
+  color: var(--muted);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  padding: 16px;
+  text-align: center;
+  line-height: 1.5;
+}
+
+@media (max-width: 980px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+    height: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .book-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .reader-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .side-panel {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .book-list,
+  .side-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .toolbar-actions {
+    justify-content: flex-start;
+  }
+
+  .reader-head {
+    grid-template-columns: 84px minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .large-cover {
+    width: 84px;
+  }
+
+  .book-meta h3 {
+    font-size: 1.72rem;
+  }
+
+  .book-meta .summary {
+    font-size: .92rem;
+  }
+
+  .page-actions {
+    flex-direction: column;
+  }
+
+  .page-actions .text-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+          <path d="M5 4.5c2.7 0 4.9.6 7 2v13c-2.1-1.4-4.3-2-7-2V4.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+          <path d="M19 4.5c-2.7 0-4.9.6-7 2v13c2.1-1.4 4.3-2 7-2V4.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Book Reader</h1>
+        <p>Short stories for daily reading</p>
+      </div>
+    </div>
+
+    <label class="search" aria-label="Search books">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
+        <path d="m16 16 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <input id="searchInput" type="search" placeholder="Search books or words" autocomplete="off" />
+    </label>
+
+    <div class="section-label">Library</div>
+    <div id="bookList" class="book-list"></div>
+  </aside>
+
+  <main class="main">
+    <header class="toolbar">
+      <div class="toolbar-title">
+        <p id="toolbarMeta">Ready to read</p>
+        <h2 id="toolbarTitle">Choose a book</h2>
+      </div>
+      <div class="toolbar-actions">
+        <button id="decreaseFont" class="icon-btn" type="button" data-tip="Smaller text" aria-label="Smaller text">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5 19 11 5h2l6 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M8 14h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <button id="increaseFont" class="icon-btn" type="button" data-tip="Larger text" aria-label="Larger text">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 19 10 5h2l6 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M7 14h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M19 8v8M15 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <button id="themeToggle" class="icon-btn" type="button" data-tip="Night mode" aria-label="Toggle night mode" aria-pressed="false">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M20.5 14.4A7.8 7.8 0 0 1 9.6 3.5 8.8 8.8 0 1 0 20.5 14.4Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <button id="speakButton" class="text-btn primary" type="button">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 10v4h4l5 4V6l-5 4H4Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M16 9.5a4 4 0 0 1 0 5M18.5 7a7.5 7.5 0 0 1 0 10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span>Listen</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="reader-wrap">
+      <div class="reader-grid">
+        <article class="reader" aria-live="polite">
+          <div class="reader-head">
+            <div id="largeCover" class="large-cover" aria-hidden="true"></div>
+            <div class="book-meta">
+              <p id="bookLevel" class="eyebrow"></p>
+              <h3 id="bookTitle"></h3>
+              <p id="bookSummary" class="summary"></p>
+              <div id="bookStats" class="stats"></div>
+            </div>
+          </div>
+
+          <section class="page">
+            <div class="page-top">
+              <div id="pageCount" class="page-count"></div>
+              <div class="progress" aria-label="Book progress"><span id="progressBar"></span></div>
+            </div>
+            <h4 id="pageTitle" class="page-title"></h4>
+            <div id="storyText" class="story-text"></div>
+            <div class="page-actions">
+              <button id="prevPage" class="text-btn" type="button">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="m15 18-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>Previous</span>
+              </button>
+              <button id="nextPage" class="text-btn primary" type="button">
+                <span>Next page</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="m9 18 6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+          </section>
+        </article>
+
+        <aside class="side-panel">
+          <section class="tool-panel">
+            <h3>Table of contents</h3>
+            <div id="toc" class="toc"></div>
+          </section>
+          <section class="tool-panel">
+            <h3>Words to notice</h3>
+            <div id="vocab" class="vocab"></div>
+          </section>
+          <section class="tool-panel">
+            <h3>Reading tip</h3>
+            <p id="readingTip" class="note"></p>
+          </section>
+        </aside>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const books = [
+  {
+    id: "sunny-steps",
+    title: "Sunny Steps",
+    level: "Level 1",
+    minutes: 4,
+    accent: "#24735f",
+    summary: "Mina learns how small daily practice can turn a hard walk into a happy routine.",
+    tags: ["practice", "weather", "sunshine"],
+    tip: "Read the first sentence softly, then read it again with a brighter voice.",
+    pages: [
+      {
+        title: "The First Hill",
+        text: [
+          "Mina stood at the bottom of the hill with her red backpack.",
+          "The morning was breezy, and the sunshine warmed the path.",
+          "She took one step, then another, and counted each step in a quiet voice."
+        ],
+        vocab: ["breezy", "sunshine", "path"]
+      },
+      {
+        title: "A New Routine",
+        text: [
+          "Every day Mina practiced walking up the hill without stopping.",
+          "Some days felt easy, and some days felt slow.",
+          "When she reached the top, she could see the school roof shining beyond the trees."
+        ],
+        vocab: ["practiced", "routine", "beyond"]
+      },
+      {
+        title: "At the Top",
+        text: [
+          "On Friday, Mina climbed the hill while humming her favorite song.",
+          "She smiled because her legs felt strong and her breathing stayed calm.",
+          "Small steps had become a big victory."
+        ],
+        vocab: ["humming", "victory", "calm"]
+      }
+    ]
+  },
+  {
+    id: "lantern-map",
+    title: "The Lantern Map",
+    level: "Level 2",
+    minutes: 5,
+    accent: "#3d7ea6",
+    summary: "Two friends follow a glowing map across a bridge and discover what teamwork can do.",
+    tags: ["bridge", "adventures", "teamwork"],
+    tip: "Pause at each comma. It makes the adventure sound clearer.",
+    pages: [
+      {
+        title: "A Light in the Drawer",
+        text: [
+          "Leo found a folded map inside his grandfather's old desk.",
+          "A tiny lantern was drawn in the corner, and its yellow ink seemed to glow.",
+          "Nora leaned close and whispered, 'Maybe it marks a real place.'"
+        ],
+        vocab: ["folded", "lantern", "glow"]
+      },
+      {
+        title: "Across the Bridge",
+        text: [
+          "The map led them to a wooden bridge above a narrow stream.",
+          "The boards creaked, but Leo and Nora crossed together.",
+          "Halfway across, the lantern mark on the paper flashed three bright times."
+        ],
+        vocab: ["narrow", "creaked", "halfway"]
+      },
+      {
+        title: "The Shared Clue",
+        text: [
+          "Under a flat stone, they found a small brass key tied with green string.",
+          "Nora read the note aloud while Leo held the map steady.",
+          "The clue only made sense when they worked side by side."
+        ],
+        vocab: ["brass", "steady", "clue"]
+      }
+    ]
+  },
+  {
+    id: "garden-watch",
+    title: "Garden Watch",
+    level: "Level 1",
+    minutes: 4,
+    accent: "#e15f4f",
+    summary: "A class garden changes through drizzle, warm soil, and tiny green shoots.",
+    tags: ["drizzle", "fertile", "shoots"],
+    tip: "Point to each plant word as you read. It helps your eyes stay with the sentence.",
+    pages: [
+      {
+        title: "Rain Before Recess",
+        text: [
+          "A soft drizzle tapped on the classroom window before recess.",
+          "The teacher said the garden would be glad for the gentle rain.",
+          "Everyone looked outside and watched the soil turn dark and rich."
+        ],
+        vocab: ["drizzle", "gentle", "soil"]
+      },
+      {
+        title: "Tiny Shoots",
+        text: [
+          "By Wednesday, tiny shoots pushed up beside the wooden labels.",
+          "The fertile soil held water like a sponge.",
+          "Each child chose one sprout to sketch in a science notebook."
+        ],
+        vocab: ["shoots", "fertile", "sketch"]
+      },
+      {
+        title: "A Living Chart",
+        text: [
+          "The class measured the plants every morning.",
+          "Their chart filled with numbers, arrows, and bright green drawings.",
+          "The garden was growing, and so was their patience."
+        ],
+        vocab: ["measured", "chart", "patience"]
+      }
+    ]
+  },
+  {
+    id: "weekend-paper",
+    title: "Weekend Paper",
+    level: "Level 2",
+    minutes: 6,
+    accent: "#e2ac2f",
+    summary: "A family newspaper turns an ordinary weekend into a small neighborhood tournament.",
+    tags: ["newspaper", "weekend", "tournament"],
+    tip: "Use a news reporter voice for the headline sentences.",
+    pages: [
+      {
+        title: "The Front Page",
+        text: [
+          "Jay folded one sheet of paper and wrote Weekend News across the top.",
+          "His sister drew a bright picture of slippers, sandwiches, and a soccer ball.",
+          "Their first headline said, 'Big fun begins after breakfast.'"
+        ],
+        vocab: ["headline", "folded", "breakfast"]
+      },
+      {
+        title: "Backyard Teams",
+        text: [
+          "After lunch, neighbors came over for a tiny soccer tournament.",
+          "The teams made flags from newspaper corners and colored tape.",
+          "Even Grandpa joined as the referee with a moustache and a whistle."
+        ],
+        vocab: ["tournament", "referee", "moustache"]
+      },
+      {
+        title: "Evening Edition",
+        text: [
+          "At sunset, Jay wrote the final score in careful letters.",
+          "His sister added a quote from the winning team.",
+          "The newspaper was only one page, but the weekend felt full of stories."
+        ],
+        vocab: ["edition", "quote", "score"]
+      }
+    ]
+  }
+];
+
+const state = {
+  bookId: localStorage.getItem("reader.bookId") || books[0].id,
+  page: Number(localStorage.getItem("reader.page") || 0),
+  font: Number(localStorage.getItem("reader.font") || 1.08),
+  theme: localStorage.getItem("reader.theme") || "day",
+  sentenceIndex: -1,
+  utterance: null
+};
+
+const els = {
+  bookList: document.getElementById("bookList"),
+  search: document.getElementById("searchInput"),
+  toolbarMeta: document.getElementById("toolbarMeta"),
+  toolbarTitle: document.getElementById("toolbarTitle"),
+  largeCover: document.getElementById("largeCover"),
+  bookLevel: document.getElementById("bookLevel"),
+  bookTitle: document.getElementById("bookTitle"),
+  bookSummary: document.getElementById("bookSummary"),
+  bookStats: document.getElementById("bookStats"),
+  pageCount: document.getElementById("pageCount"),
+  progressBar: document.getElementById("progressBar"),
+  pageTitle: document.getElementById("pageTitle"),
+  storyText: document.getElementById("storyText"),
+  prevPage: document.getElementById("prevPage"),
+  nextPage: document.getElementById("nextPage"),
+  toc: document.getElementById("toc"),
+  vocab: document.getElementById("vocab"),
+  readingTip: document.getElementById("readingTip"),
+  speak: document.getElementById("speakButton"),
+  theme: document.getElementById("themeToggle"),
+  increaseFont: document.getElementById("increaseFont"),
+  decreaseFont: document.getElementById("decreaseFont")
+};
+
+function iconCover(book, large = false) {
+  const stroke = book.accent;
+  const title = book.title.split(" ")[0].slice(0, 8).toUpperCase();
+  const sizeText = large ? 14 : 12;
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+      <rect width="120" height="160" rx="10" fill="${book.accent}"/>
+      <path d="M15 26h90v108H15z" fill="rgba(255,255,255,.20)"/>
+      <path d="M30 42c16 0 25 4 30 12 5-8 14-12 30-12v68c-16 0-25 4-30 12-5-8-14-12-30-12V42Z" fill="white" opacity=".9"/>
+      <path d="M60 54v68" stroke="${stroke}" stroke-width="3"/>
+      <path d="M39 65h13M39 78h13M39 91h13M68 65h13M68 78h13M68 91h13" stroke="${stroke}" stroke-width="3" stroke-linecap="round" opacity=".7"/>
+      <circle cx="92" cy="28" r="12" fill="#fff" opacity=".35"/>
+      <text x="60" y="145" text-anchor="middle" font-family="Arial,sans-serif" font-size="${sizeText}" font-weight="700" fill="white">${title}</text>
+    </svg>`;
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
+function currentBook() {
+  return books.find(book => book.id === state.bookId) || books[0];
+}
+
+function currentPage(book = currentBook()) {
+  return book.pages[Math.min(state.page, book.pages.length - 1)];
+}
+
+function saveState() {
+  localStorage.setItem("reader.bookId", state.bookId);
+  localStorage.setItem("reader.page", String(state.page));
+  localStorage.setItem("reader.font", String(state.font));
+  localStorage.setItem("reader.theme", state.theme);
+}
+
+function getProgress(book) {
+  const savedId = localStorage.getItem(`reader.${book.id}.page`);
+  const saved = savedId === null ? (book.id === state.bookId ? state.page : 0) : Number(savedId);
+  return Math.round(((saved + 1) / book.pages.length) * 100);
+}
+
+function setBook(id) {
+  stopSpeech();
+  state.bookId = id;
+  state.page = Number(localStorage.getItem(`reader.${id}.page`) || 0);
+  state.sentenceIndex = -1;
+  saveState();
+  render();
+}
+
+function setPage(page) {
+  const book = currentBook();
+  stopSpeech();
+  state.page = Math.max(0, Math.min(page, book.pages.length - 1));
+  state.sentenceIndex = -1;
+  localStorage.setItem(`reader.${book.id}.page`, String(state.page));
+  saveState();
+  render();
+}
+
+function renderBookList() {
+  const query = els.search.value.trim().toLowerCase();
+  const filtered = books.filter(book => {
+    const haystack = [book.title, book.level, book.summary, ...book.tags].join(" ").toLowerCase();
+    return haystack.includes(query);
+  });
+
+  els.bookList.innerHTML = "";
+
+  if (!filtered.length) {
+    const empty = document.createElement("div");
+    empty.className = "empty";
+    empty.textContent = "No matching books.";
+    els.bookList.appendChild(empty);
+    return;
+  }
+
+  filtered.forEach(book => {
+    const card = document.createElement("button");
+    card.className = `book-card${book.id === state.bookId ? " active" : ""}`;
+    card.type = "button";
+    card.innerHTML = `
+      <img class="cover" src="${iconCover(book)}" alt="" />
+      <span>
+        <h2>${book.title}</h2>
+        <p>${book.level} · ${book.minutes} min · ${book.pages.length} pages</p>
+        <span class="mini-progress" aria-hidden="true"><span style="width:${getProgress(book)}%"></span></span>
+      </span>`;
+    card.addEventListener("click", () => setBook(book.id));
+    els.bookList.appendChild(card);
+  });
+}
+
+function renderReader() {
+  const book = currentBook();
+  const page = currentPage(book);
+  const progress = Math.round(((state.page + 1) / book.pages.length) * 100);
+
+  els.toolbarMeta.textContent = `${book.level} · ${book.minutes} min`;
+  els.toolbarTitle.textContent = book.title;
+  els.largeCover.innerHTML = `<img src="${iconCover(book, true)}" alt="" style="width:100%;height:100%;display:block" />`;
+  els.bookLevel.textContent = `${book.level} reader`;
+  els.bookTitle.textContent = book.title;
+  els.bookSummary.textContent = book.summary;
+  els.bookStats.innerHTML = `
+    <span class="pill">${book.pages.length} pages</span>
+    <span class="pill">${book.minutes} min read</span>
+    <span class="pill">${progress}% complete</span>`;
+  els.pageCount.textContent = `Page ${state.page + 1} of ${book.pages.length}`;
+  els.progressBar.style.width = `${progress}%`;
+  els.pageTitle.textContent = page.title;
+  els.readingTip.textContent = book.tip;
+
+  els.storyText.innerHTML = "";
+  page.text.forEach((sentence, index) => {
+    const span = document.createElement("span");
+    span.className = `sentence${index === state.sentenceIndex ? " active" : ""}`;
+    span.textContent = sentence;
+    span.tabIndex = 0;
+    span.addEventListener("click", () => speakSentence(index));
+    span.addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        speakSentence(index);
+      }
+    });
+    els.storyText.appendChild(span);
+  });
+
+  els.prevPage.disabled = state.page === 0;
+  els.nextPage.disabled = state.page === book.pages.length - 1;
+  els.prevPage.style.opacity = els.prevPage.disabled ? ".55" : "1";
+  els.nextPage.style.opacity = els.nextPage.disabled ? ".55" : "1";
+}
+
+function renderToc() {
+  const book = currentBook();
+  els.toc.innerHTML = "";
+  book.pages.forEach((page, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = index === state.page ? "active" : "";
+    button.textContent = `${index + 1}. ${page.title}`;
+    button.addEventListener("click", () => setPage(index));
+    els.toc.appendChild(button);
+  });
+}
+
+function renderVocab() {
+  const page = currentPage();
+  els.vocab.innerHTML = "";
+  page.vocab.forEach(word => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = word;
+    button.addEventListener("click", () => speakText(word));
+    els.vocab.appendChild(button);
+  });
+}
+
+function renderTheme() {
+  document.documentElement.dataset.theme = state.theme === "night" ? "night" : "day";
+  els.theme.setAttribute("aria-pressed", String(state.theme === "night"));
+}
+
+function renderFont() {
+  document.documentElement.style.setProperty("--reader-size", `${state.font}rem`);
+}
+
+function render() {
+  renderTheme();
+  renderFont();
+  renderBookList();
+  renderReader();
+  renderToc();
+  renderVocab();
+}
+
+function stopSpeech() {
+  if ("speechSynthesis" in window) {
+    window.speechSynthesis.cancel();
+  }
+  state.utterance = null;
+  state.sentenceIndex = -1;
+  els.speak.querySelector("span").textContent = "Listen";
+}
+
+function speakText(text, onEnd) {
+  if (!("speechSynthesis" in window)) {
+    alert("Speech is not supported in this browser.");
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "en-US";
+  utterance.rate = 0.86;
+  utterance.pitch = 1.02;
+  utterance.onend = () => {
+    state.utterance = null;
+    if (typeof onEnd === "function") onEnd();
+  };
+  state.utterance = utterance;
+  window.speechSynthesis.speak(utterance);
+}
+
+function speakSentence(index) {
+  const page = currentPage();
+  state.sentenceIndex = index;
+  renderReader();
+  speakText(page.text[index], () => {
+    state.sentenceIndex = -1;
+    renderReader();
+  });
+}
+
+function speakPage() {
+  if (state.utterance) {
+    stopSpeech();
+    renderReader();
+    return;
+  }
+
+  const page = currentPage();
+  const fullText = `${page.title}. ${page.text.join(" ")}`;
+  els.speak.querySelector("span").textContent = "Stop";
+  speakText(fullText, () => {
+    els.speak.querySelector("span").textContent = "Listen";
+  });
+}
+
+els.search.addEventListener("input", renderBookList);
+els.prevPage.addEventListener("click", () => setPage(state.page - 1));
+els.nextPage.addEventListener("click", () => setPage(state.page + 1));
+els.speak.addEventListener("click", speakPage);
+els.theme.addEventListener("click", () => {
+  state.theme = state.theme === "night" ? "day" : "night";
+  saveState();
+  renderTheme();
+});
+els.increaseFont.addEventListener("click", () => {
+  state.font = Math.min(1.42, Math.round((state.font + 0.08) * 100) / 100);
+  saveState();
+  renderFont();
+});
+els.decreaseFont.addEventListener("click", () => {
+  state.font = Math.max(.94, Math.round((state.font - 0.08) * 100) / 100);
+  saveState();
+  renderFont();
+});
+
+window.addEventListener("keydown", event => {
+  if (event.target.matches("input, textarea")) return;
+  if (event.key === "ArrowRight") setPage(state.page + 1);
+  if (event.key === "ArrowLeft") setPage(state.page - 1);
+  if (event.key.toLowerCase() === "l") speakPage();
+});
+
+render();
+</script>
+</body>
+</html>
