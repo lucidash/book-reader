@@ -1,6 +1,6 @@
 # Book Reader
 
-Single-file static reading app inspired by the adjacent `word-book` project.
+Single-file static reading app for the five generated photo-book readers. The HTML is Gist-friendly and loads book images/audio from the public GCS deployment.
 
 - Preview: https://htmlpreview.github.io/?https://gist.githubusercontent.com/lucidash/c8159d35a2677cc01940357822dab316/raw/index.html
 - Gist: https://gist.github.com/lucidash/c8159d35a2677cc01940357822dab316
